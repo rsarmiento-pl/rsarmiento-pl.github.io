@@ -20,6 +20,7 @@ simpleGit.addConfig('user.name','Raymond Sarmiento');
 // Add remote repo url as origin to repo
 // simpleGitPromise.addRemote('origin',gitHubUrl);
 // Add all files for commit
+
 simpleGitPromise.add('.')
     .then(
        (addSuccess) => {
@@ -42,3 +43,19 @@ simpleGitPromise.add('.')
     },(failed)=> {
        console.log('repo push failed');
  });
+
+const gitP = require('simple-git/promise');
+const git = gitP(__dirname + "\\dist\\profile-page\\");
+
+git.checkIsRepo()
+   .then(isRepo => !isRepo && initialiseRepo(git))
+   .then(() => git.fetch());
+
+function initialiseRepo (git) {
+   return git.init()
+      .then(() => git.addRemote('origin', gitHubUrl))
+}
+
+simpleGit.add('./dist/profile-page/')
+     .commit("automated commit")
+     .push(['-u', 'origin' , 'master',{'--force': true} ], () => console.log('automated push done'));
