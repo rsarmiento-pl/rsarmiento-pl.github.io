@@ -6,21 +6,21 @@ const shellJs = require('shelljs');
 const simpleGitPromise = require('simple-git/promise')();
 
 // change current directory to repo directory in local
-shellJs.cd('path/to/repo/folder');
+shellJs.cd('dist/profile-page/');
 // Repo name
 const repo = 'rsarmiento-pl.github.io';  //Repo name
 // User name and password of your GitHub
 const userName = 'rsarmiento-pl';
-const password = 'password';
+const password = 'pl3Spy2257464#';
 // Set up GitHub url like this so no manual entry of user pass needed
 const gitHubUrl = `https://${userName}:${password}@github.com/${userName}/${repo}`;
 // add local git config like username and email
 simpleGit.addConfig('user.email','rsarmiento@peerlancers.com');
 simpleGit.addConfig('user.name','Raymond Sarmiento');
 // Add remote repo url as origin to repo
-simpleGitPromise.addRemote('origin',gitHubUrl);
+// simpleGitPromise.addRemote('origin',gitHubUrl);
 // Add all files for commit
-  simpleGitPromise.add('.')
+simpleGitPromise.add('.')
     .then(
        (addSuccess) => {
           console.log(addSuccess);
@@ -36,7 +36,7 @@ simpleGitPromise.addRemote('origin',gitHubUrl);
         console.log('failed commmit');
  });
 // Finally push to online repository
- simpleGitPromise.push('origin','master')
+ simpleGitPromise.push(gitHubUrl,'master', {'--force': true})
     .then((success) => {
        console.log('repo successfully pushed');
     },(failed)=> {
