@@ -1,61 +1,55 @@
-// Simple-git without promise
-const simpleGit = require('simple-git')();
-// Shelljs package for running shell tasks optional
-const shellJs = require('shelljs');
-// Simple Git with Promise for handling success and failure
-const simpleGitPromise = require('simple-git/promise')();
+const GIT_REPO = process.env.FTP_HOST || 'rsarmiento-pl.github.io';
+const GIT_USERNAME = process.env.FTP_HOST || 'rsarmiento-pl';
+const GIT_EMAIL = process.env.FTP_HOST || 'rsarmiento@peerlancers.com';
+const SSH_PRIVATE_KEY_LOCAL_PATH = process.env.FTP_HOST || '/c/Users/RaymondS/.ssh/id_rsa_peerlancers';
+const DIST_PATH = `./dist/${GIT_REPO}/`;
+const GIT_HUB_URL_SSH = `git@github.com:${GIT_USERNAME}/${GIT_REPO}.git`;
+//Find a way to pass the commit message from Code Repo to Circle Dist Repo
+const GIT_COMMIT_MSG = `Auto deployed using Node, SimpleGit and CircleCI ${new Date()}` || process.argv[2].toString();
 
-// change current directory to repo directory in local
-shellJs.cd('dist/profile-page/');
-// Repo name
-const repo = 'rsarmiento-pl.github.io';  //Repo name
-// User name and password of your GitHub
-const userName = 'rsarmiento-pl';
-const password = 'pl3Spy2257464#';
-// Set up GitHub url like this so no manual entry of user pass needed
-const gitHubUrl = `https://${userName}:${password}@github.com/${userName}/${repo}`;
-// add local git config like username and email
-simpleGit.addConfig('user.email','rsarmiento@peerlancers.com');
-simpleGit.addConfig('user.name','Raymond Sarmiento');
-// Add remote repo url as origin to repo
-// simpleGitPromise.addRemote('origin',gitHubUrl);
-// Add all files for commit
+const git = require('simple-git/promise')(DIST_PATH);
 
-simpleGitPromise.add('.')
-    .then(
-       (addSuccess) => {
-          console.log(addSuccess);
-       }, (failedAdd) => {
-          console.log('adding files failed');
-    });
-// Commit files as Initial Commit
- simpleGitPromise.commit('Intial commit by simplegit')
-   .then(
-      (successCommit) => {
-        console.log(successCommit);
-     }, (failed) => {
-        console.log('failed commmit');
- });
-// Finally push to online repository
- simpleGitPromise.push(gitHubUrl,'master', {'--force': true})
-    .then((success) => {
-       console.log('repo successfully pushed');
-    },(failed)=> {
-       console.log('repo push failed');
- });
+git.cwd(DIST_PATH);
+git.addConfig('user.email', GIT_EMAIL);
+git.addConfig('user.name', GIT_USERNAME);
+git.addConfig('core.sshCommand', `ssh -i ${SSH_PRIVATE_KEY_LOCAL_PATH}`);
 
-const gitP = require('simple-git/promise');
-const git = gitP(__dirname + "\\dist\\profile-page\\");
-
+// Initialize repo if it is still not initialize, fetch if its already initialize
 git.checkIsRepo()
-   .then(isRepo => !isRepo && initialiseRepo(git))
-   .then(() => git.fetch());
+  .then(isRepo => !isRepo && initializeRepo(git))
+  .then(() => git.fetch());
 
-function initialiseRepo (git) {
-   return git.init()
-      .then(() => git.addRemote('origin', gitHubUrl))
+// Add all of the changes under dist/repoName
+git.add('.').then(
+  (success) => {
+    console.log("Successfully staged changes");
+  }, (error) => {
+    console.log(`Failed to Add: ${error}`);
+  }
+);
+
+// Commit all staged files
+git.commit(GIT_COMMIT_MSG)
+  .then(
+    (success) => {
+      console.log('Successfully commmitted changes');
+    }, (error) => {
+      console.log(`Failed to Commit: ${error}`);
+    });
+
+// Push Commited changes to Remote
+git.push('origin', 'master', {
+    '--force': true
+  })
+  .then((success) => {
+    console.log('Successfully pushed changes to Remote');
+  }, (error) => {
+   console.log(`Failed to Push: ${error}`);
+  });
+
+
+// Initialize Repo
+function initializeRepo(git) {
+  return git.init()
+    .then(() => git.addRemote('origin', GIT_HUB_URL_SSH))
 }
-
-simpleGit.add('./dist/profile-page/')
-     .commit("automated commit")
-     .push(['-u', 'origin' , 'master',{'--force': true} ], () => console.log('automated push done'));
